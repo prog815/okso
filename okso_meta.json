@@ -1,0 +1,153 @@
+{
+  "classifier_name": "ОКСО",
+  "classifier_full_name": "Общероссийский классификатор специальностей по образованию (ОКСО)",
+  "standard": "ОК 009-2016",
+  "standard_full": "Общероссийский классификатор специальностей по образованию",
+  "standard_english": "Russian classification of professions by education",
+  "standard_line": "ОК 009-2016. Введён 1 июля 2017. Приказ Росстандарта от 8 декабря 2016 г. N 2007-ст. Взамен ОК 009-2003, ОК 023-95.",
+  "effective_date": "2017-07-01",
+  "effective_date_display": "1 июля 2017",
+  "legal_act": "Приказ Росстандарта от 8 декабря 2016 г. N 2007-ст",
+  "replaces": "ОК 009-2003, ОК 023-95",
+  "change": "",
+  "source_identifier": "okso-classifikators",
+  "source_page": "https://classifikators.ru/okso",
+  "source_file_url": "https://classifikators.ru/assets/downloads/okso/okso.xlsx",
+  "source_filename": "okso.xlsx",
+  "source_sha256": "a6b15fed75e7f0fa9958c8987f3081e4e7af09e4c67cb6469b83503118348861",
+  "source_modified": "Tue, 05 Mar 2024 21:28:59 GMT",
+  "source_date": "2017-07-01",
+  "source_date_display": "1 июля 2017",
+  "source_date_origin": "standard_known",
+  "provenance": "classifikators.ru · ОК 009-2016",
+  "generated_at": "2026-10-22T14:47:25.147867+00:00",
+  "version": "2017-07-01",
+  "records_count": 1593,
+  "declared_count": 0,
+  "sections_count": 9,
+  "sections": [
+    {
+      "roman": "I",
+      "name": "ПРОФЕССИИ СРЕДНЕГО ПРОФЕССИОНАЛЬНОГО ОБРАЗОВАНИЯ",
+      "count": 329
+    },
+    {
+      "roman": "II",
+      "name": "СПЕЦИАЛЬНОСТИ СРЕДНЕГО ПРОФЕССИОНАЛЬНОГО ОБРАЗОВАНИЯ",
+      "count": 293
+    },
+    {
+      "roman": "III",
+      "name": "НАПРАВЛЕНИЯ ПОДГОТОВКИ ВЫСШЕГО ОБРАЗОВАНИЯ - БАКАЛАВРИАТА",
+      "count": 240
+    },
+    {
+      "roman": "IV",
+      "name": "НАПРАВЛЕНИЯ ПОДГОТОВКИ ВЫСШЕГО ОБРАЗОВАНИЯ - МАГИСТРАТУРЫ",
+      "count": 257
+    },
+    {
+      "roman": "V",
+      "name": "СПЕЦИАЛЬНОСТИ ВЫСШЕГО ОБРАЗОВАНИЯ - СПЕЦИАЛИТЕТА",
+      "count": 163
+    },
+    {
+      "roman": "VI",
+      "name": "НАПРАВЛЕНИЯ ПОДГОТОВКИ ВЫСШЕГО ОБРАЗОВАНИЯ - ПОДГОТОВКИ КАДРОВ ВЫСШЕЙ КВАЛИФИКАЦИИ ПО ПРОГРАММАМ ПОДГОТОВКИ НАУЧНО-ПЕДАГОГИЧЕСКИХ КАДРОВ В АСПИРАНТУРЕ",
+      "count": 115
+    },
+    {
+      "roman": "VII",
+      "name": "НАПРАВЛЕНИЯ ПОДГОТОВКИ ВЫСШЕГО ОБРАЗОВАНИЯ - ПОДГОТОВКИ КАДРОВ ВЫСШЕЙ КВАЛИФИКАЦИИ ПО ПРОГРАММАМ ПОДГОТОВКИ НАУЧНО-ПЕДАГОГИЧЕСКИХ КАДРОВ В АДЪЮНКТУРЕ",
+      "count": 62
+    },
+    {
+      "roman": "VIII",
+      "name": "СПЕЦИАЛЬНОСТИ ВЫСШЕГО ОБРАЗОВАНИЯ - ПОДГОТОВКИ КАДРОВ ВЫСШЕЙ КВАЛИФИКАЦИИ ПО ПРОГРАММАМ ОРДИНАТУРЫ",
+      "count": 99
+    },
+    {
+      "roman": "IX",
+      "name": "СПЕЦИАЛЬНОСТИ ВЫСШЕГО ОБРАЗОВАНИЯ - ПОДГОТОВКИ КАДРОВ ВЫСШЕЙ КВАЛИФИКАЦИИ ПО ПРОГРАММАМ АССИСТЕНТУРЫ-СТАЖИРОВКИ",
+      "count": 35
+    }
+  ],
+  "section_counts": {
+    "I": 329,
+    "II": 293,
+    "III": 240,
+    "IV": 257,
+    "V": 163,
+    "VI": 115,
+    "VII": 62,
+    "VIII": 99,
+    "IX": 35
+  },
+  "levels_count": {
+    "1": 9,
+    "2": 60,
+    "3": 293,
+    "4": 1231
+  },
+  "branches_count": 362,
+  "leaves_count": 1231,
+  "record_format": [
+    "code",
+    "name",
+    "level",
+    "parent",
+    "isLeaf",
+    "section",
+    "officialCode",
+    "msko2011",
+    "mskoO2013",
+    "sourceOrder"
+  ],
+  "record_format_description": "code = unique hierarchical identifier with section prefix (level 1 'I'-'IX'; level 2 'I.1'; level 3 'I.1.05'; level 4 '1.05.01.01' = official); name = from source (normalized whitespace); level = '1'..'4' (section/oblast/group/specialty); parent = parent code, '' for level 1; isLeaf = '1' if no children else '0'; section = roman numeral I-IX; officialCode = display code: '' (section), 'X' (oblast), 'X.YY.00.00' (group), 'X.YY.ZZ.WW' (specialty); msko2011 = 3-digit MSKO 2011 program code (specialties only, '' otherwise); mskoO2013 = 4-digit MSKO-O 2013 area code (specialties only, '' otherwise); sourceOrder = 1-based order in source XLSX. Hierarchical model, 4 levels, no manual aliases, no overlays.",
+  "flat_model": false,
+  "hierarchy_model": "four_level_okso",
+  "hierarchy_note": "ОКСО — четырёхуровневый иерархический справочник: раздел (I-IX) → область образования → укрупнённая группа → специальность. Иерархия воспроизводится как в источнике; не достраивается и не объединяется вручную. Один и тот же официальный X.YY.00.00 в разных разделах — это разные записи (дети разные), внутренний код различается префиксом раздела.",
+  "code_system_note": "Код ОКСО — семь цифровых знаков X.XX.XX.XX: X — код области образования, XX — код укрупнённой группы, XX — код образовательного уровня (01=СПО рабочие, 02=СПО специалисты, 03=бакалавриат, 04=магистратура, 05=специалитет, 06=аспирантура, 07=адъюнктура, 08=ординатура, 09=ассистентура-стажировка), XX — код специальности. Внутренние коды уровней 1-3 в веб-наборе имеют префикс раздела (например, 'I.1.05'), потому что официальный X.YY.00.00 встречается в разных разделах с разными детьми. Официальный код вынесен в officialCode.",
+  "aliases_included": false,
+  "aliases_source": "none",
+  "manual_overlays": [],
+  "disclaimer": "Материалы носят справочный характер и не являются точными копиями официальных документов. Перед применением в официальных документах сверяйте по первоисточнику (Гарант/КонсультантПлюс/Кодекс). ОКСО сопоставлен с МСКО 2011 и МСКО-О 2013; коды МСКО приведены для каждой специальности по источнику.",
+  "primary_sources": [
+    {
+      "name": "classifikators.ru (машиночитаемый снимок)",
+      "url": "https://classifikators.ru/okso"
+    },
+    {
+      "name": "Гарант (ОК 009-2016)",
+      "url": "https://internet.garant.ru/#/document/71594768"
+    },
+    {
+      "name": "КонсультантПлюс (ОК 009-2016)",
+      "url": "https://www.consultant.ru/document/cons_doc_LAW_212200/"
+    },
+    {
+      "name": "Кодекс (ОК 009-2016)",
+      "url": "https://docs.cntd.ru/document/456069557"
+    }
+  ],
+  "statistics": {
+    "records": 1593,
+    "sections": 9,
+    "levels": {
+      "1": 9,
+      "2": 60,
+      "3": 293,
+      "4": 1231
+    },
+    "branches": 362,
+    "leaves": 1231
+  },
+  "warnings": [
+    "declared count not available in source (classifikators XLSX)"
+  ],
+  "critical_errors": [],
+  "publish_allowed": true,
+  "data_hash": "95b0c1a4472cb741",
+  "file_size_json": 216710,
+  "file_size_json_gz": 34159
+}
