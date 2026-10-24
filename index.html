@@ -186,63 +186,8 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  /* share modal */
-  .share-modal-backdrop {
-    position: fixed; top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.4); z-index: 100;
-    display: none; align-items: center; justify-content: center;
-  }
-  .share-modal-backdrop.show { display: flex; }
-  .share-modal {
-    background: #fff; border-radius: 16px; padding: 24px;
-    width: 90%; max-width: 520px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    position: relative; display: flex; flex-direction: column; gap: 12px;
-  }
-  .share-modal h3 { margin: 0; font-size: 18px; }
-  .share-hint { margin: 0; font-size: 13px; color: #718096; }
-  .share-textarea {
-    width: 100%; height: 160px; padding: 12px; border: 1px solid #cbd5e0; border-radius: 8px;
-    font-family: var(--mono); font-size: 13px; line-height: 1.5; background: #f7fafc; color: #2d3748;
-    resize: vertical;
-  }
-  .share-btn-primary {
-    background: var(--accent); border-color: var(--accent); color: #fff;
-    padding: 10px; font-weight: 600; justify-content: center; width: 100%; border-radius: 10px;
-    border-style: solid; font-size: 14px;
-  }
-  .share-btn-primary:hover { background: #2e7d4f; color: #fff; }
   
-  .share-links-row {
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 4px;
-  }
-  .share-links-label { font-size: 13px; color: #718096; width: 100%; margin-bottom: -2px; }
   
-  .share-mail-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-    width: 100%;
-    margin-bottom: 6px;
-  }
-  .share-mail-grid a {
-    text-align: center;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: 500;
-    background: #fff;
-    color: #2d3748;
-    border: 1px solid #cbd5e0;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: all 0.15s;
-  }
-  .share-mail-grid a:hover { background: #f7fafc; border-color: #a0aec0; }
-  
-  .share-close {
-    background: none; border: none; color: #a0aec0; cursor: pointer;
-    position: absolute; top: 12px; right: 16px; font-size: 24px; padding: 0; line-height: 1;
-  }
-  .share-close:hover { color: #4a5568; }
 
   @media (max-width:720px){
     .hero h1{font-size:25px}
@@ -253,14 +198,14 @@
     .statusline{flex-direction:column;gap:2px}
     .statusline .date{text-align:left}
     .actions-group{width:100%; margin-left:0; justify-content:flex-start; margin-top: 6px;}
-    .share-textarea { height: 140px; }
-    .share-mail-grid { grid-template-columns: 1fr; }
+
   }
 </style>
 </head>
 <body>
 <!-- Версия каталога после добавления ОКСО — ?v=3.0.0. -->
 <script src="https://prog815.github.io/common-menu/menu.js?v=3.0.0"></script>
+<script src="https://prog815.github.io/common-menu/share.js?v=1.0.0"></script>
 <common-projects-menu></common-projects-menu>
 
 <div class="wrap hero">
@@ -335,31 +280,7 @@
 </footer>
 
 <!-- Модальное окно "Поделиться" -->
-<div class="share-modal-backdrop" id="shareModal">
-  <div class="share-modal">
-    <button class="share-close" id="shareClose" title="Закрыть">&times;</button>
-    <h3>Отправить коллегам</h3>
-    <p class="share-hint">Полный текст карточки со ссылкой внизу. Можно скопировать и вставить в любой чат или почту.</p>
-    <textarea class="share-textarea" id="shareText" readonly onclick="this.select()"></textarea>
-    <button class="btn-small share-btn-primary" id="shareCopyBtn">
-      📋 Скопировать текст и ссылку
-    </button>
-    
-    <div class="share-links-row">
-      <span class="share-links-label">Отправить через веб-почту:</span>
-      <div class="share-mail-grid">
-        <a href="#" id="shareGmail" target="_blank" rel="noopener">Gmail</a>
-        <a href="#" id="shareYandex" target="_blank" rel="noopener">Яндекс.Почта</a>
-        <a href="#" id="shareMailru" target="_blank" rel="noopener">Mail.ru</a>
-        <a href="#" id="shareRambler" target="_blank" rel="noopener">Рамблер</a>
-      </div>
-    </div>
 
-    <button class="btn-small" id="shareNative" style="display:none; justify-content:center; margin-top: 4px;">
-      📱 Открыть системное меню
-    </button>
-  </div>
-</div>
 
 <div class="fab up"><button id="toTop" type="button" title="Наверх" aria-label="Наверх">↑</button></div>
 <div class="fab down"><button id="toBottom" type="button" title="Вниз" aria-label="Вниз">↓</button></div>
@@ -393,8 +314,7 @@
   var shown = PAGE_SIZE;
   var META = null;
   var pendingFocusCode = "";
-  var currentShareText = "";
-  var currentShareCard = null;
+
 
   var $ = function(id){return document.getElementById(id);};
   var elState=$("state"), elList=$("list"), elMoreWrap=$("moreWrap"), elMore=$("more");
@@ -405,11 +325,7 @@
       elFootDisc=$("footDisc"), elToast=$("toast"),
       elTop=$("toTop"), elBottom=$("toBottom");
       
-  var elShareModal = $("shareModal"), elShareClose = $("shareClose"), 
-      elShareText = $("shareText"), elShareCopyBtn = $("shareCopyBtn"),
-      elShareGmail = $("shareGmail"), elShareYandex = $("shareYandex"), 
-      elShareMailru = $("shareMailru"), elShareRambler = $("shareRambler"),
-      elShareNative = $("shareNative");
+
 
   function norm(s){
     s = String(s==null?"":s).toLowerCase().replace(/ё/g,"е");
@@ -762,12 +678,21 @@
     var actions = document.createElement("div");
     actions.className = "actions-group";
 
+    // Оборачиваем кнопку в веб-компонент
+    var shareWrap = document.createElement("klassik-share");
+    shareWrap.setAttribute("catalog", "okso");
+    shareWrap.setAttribute("title", "ОКСО: " + displayCode + " — " + r.name);
+    shareWrap.setAttribute("text", buildShareText(r));
+    shareWrap.setAttribute("url", location.origin + location.pathname + "?code=" + encodeURIComponent(r.code));
+
     var shareBtn = document.createElement("button");
-    shareBtn.type="button"; shareBtn.className="btn-small";
+    shareBtn.type = "button"; 
+    shareBtn.className = "btn-small";
     shareBtn.innerHTML = "📤 Поделиться";
     shareBtn.title = "Отправить карточку коллегам";
-    shareBtn.dataset.act = "share-card"; shareBtn.dataset.val = r.code;
-    actions.appendChild(shareBtn);
+    
+    shareWrap.appendChild(shareBtn);
+    actions.appendChild(shareWrap);
 
     var copyFull = document.createElement("button");
     copyFull.type="button"; copyFull.className="btn-small";
@@ -949,46 +874,9 @@
     return lines.join("\n");
   }
 
-  function openShareModal(code) {
-    var r = BY_CODE[code];
-    if (!r) return;
 
-    currentShareCard = r;
-    currentShareText = buildShareText(r);
-    var url = location.origin + location.pathname + "?code=" + encodeURIComponent(r.code);
-    
-    elShareText.value = currentShareText;
 
-    var subject = encodeURIComponent("ОКСО: " + (r.official || r.code) + " — " + r.name);
-    var body = encodeURIComponent(currentShareText);
 
-    elShareGmail.href = "https://mail.google.com/mail/?view=cm&fs=1&su=" + subject + "&body=" + body;
-    elShareYandex.href = "https://mail.yandex.ru/compose?to=&subject=" + subject + "&body=" + body;
-    elShareMailru.href = "https://e.mail.ru/compose/?subject=" + subject + "&body=" + body;
-    elShareRambler.href = "https://mail.rambler.ru/mail/compose?subject=" + subject + "&body=" + body;
-
-    if (navigator.share) {
-      elShareNative.style.display = "inline-flex";
-      elShareNative.onclick = function() {
-        navigator.share({
-          title: 'ОКСО: ' + r.name,
-          text: currentShareText
-        }).catch(function(err) {
-          console.log("Share failed:", err);
-        });
-      };
-    } else {
-      elShareNative.style.display = "none";
-    }
-
-    elShareModal.classList.add("show");
-  }
-
-  elShareClose.addEventListener("click", function() { elShareModal.classList.remove("show"); });
-  elShareModal.addEventListener("click", function(e) { if(e.target === elShareModal) elShareModal.classList.remove("show"); });
-  elShareCopyBtn.addEventListener("click", function() {
-    copyText(currentShareText, "Текст скопирован! Вставьте в чат или почту.");
-  });
 
   function syncClear(){ elBox.classList.toggle("has-val", !!elQ.value); }
 
@@ -1013,7 +901,6 @@
     
     if(act==="copy-code") copyText(val, "Код "+val+" скопирован");
     else if(act==="copy-full") copyText(val, "Скопировано: "+val);
-    else if(act==="share-card") openShareModal(val);
     else if(act==="filter-sec") {
       elSec.value = val;
       elQ.value = "";
