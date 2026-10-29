@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ОКСО — Общероссийский классификатор специальностей по образованию</title>
-<meta name="description" content="Поиск по ОКСО: код специальности, наименование, раздел, МСКО. Иерархический справочник (ОК 009-2016).">
+<meta name="description" content="Поиск по ОКСО: код специальности, наименование, раздел, коды МСКО. Справочник специальностей по образованию (ОК 009-2016).">
 <meta name="theme-color" content="#eef4ee">
 <link rel="icon" type="image/svg+xml" href="https://prog815.github.io/common-menu/favicon.svg?v=1.0.0">
 <style>
+  [hidden]{display:none!important}
+
   :root{
     --bg:#eef4ee; --panel:#ffffff; --text:#1b2e1e; --muted:#5b6e5d;
     --line:#d1e0d3; --line-strong:#b9cdbb;
@@ -17,10 +19,11 @@
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
     --radius:12px;
 
-    /* Роли */
     --code:#2e6b30;   --code-bg:#e3f1e7;   --code-fg:#1b3b1d;
     --msko:#7b6fa6;   --msko-bg:#f4f2f9;   --msko-fg:#4a3d78;
     --sec:#7b6fa6;    --sec-bg:#f4f2f9;    --sec-fg:#4a3d78;
+
+    --lvl-1:#2b6cb0; --lvl-2:#3182ce; --lvl-3:#4299e1; --lvl-4:#63b3ed;
   }
   *{box-sizing:border-box}
   html,body{margin:0}
@@ -32,7 +35,6 @@
   a{color:var(--accent-text)}
   .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
 
-  /* header */
   .hero{padding:18px 0 6px}
   .hero h1{margin:0 0 4px;font-size:30px;letter-spacing:.2px}
   .hero p{margin:0;color:var(--muted);font-size:15px;max-width:940px}
@@ -42,12 +44,10 @@
     border-left:5px solid var(--accent);border-radius:10px;background:var(--panel);
     color:var(--text);font-size:13.5px;box-shadow:var(--shadow);
   }
-  .notice b{font-weight:600}
   .notice a{white-space:nowrap}
   .hints{margin:10px 0 0;color:var(--muted);font-size:13px}
   .hints .mono{font-family:var(--mono);letter-spacing:.3px}
 
-  /* sticky search panel */
   .panel{
     position:sticky;top:0;z-index:30;background:rgba(255,255,255,.92);
     backdrop-filter:saturate(1.1) blur(6px);
@@ -61,14 +61,13 @@
     border-radius:10px;font-size:15px;background:var(--panel);color:var(--text);
   }
   #q:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
-  #q::-webkit-search-cancel-button{display:none;-webkit-appearance:none}
-  .clear{
+  .clear-btn{
     position:absolute;right:8px;top:50%;transform:translateY(-50%);
-    border:none;background:transparent;color:var(--muted);font-size:18px;line-height:1;
-    cursor:pointer;padding:4px 6px;border-radius:8px;display:none;
+    border:none;background:transparent;color:var(--muted);font-size:16px;line-height:1;
+    cursor:pointer;padding:6px 8px;border-radius:8px;display:none;
   }
-  .clear:hover{background:var(--accent-weak);color:var(--accent-text)}
-  .searchbox.has-val .clear{display:block}
+  .clear-btn:hover{background:var(--accent-weak);color:var(--accent-text)}
+  .searchbox.has-val .clear-btn{display:block}
 
   select.filters{
     padding:11px 14px;border:1px solid var(--line-strong);border-radius:10px;
@@ -77,13 +76,17 @@
   }
   select.filters:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-weak)}
 
-  /* status line */
   .statusline{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;
     color:var(--muted);font-size:13px;padding:2px 2px 0}
   .statusline .found b{color:var(--text)}
-  .statusline .date{white-space:nowrap;text-align:right;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+  .statusline .actions{display:flex;gap:12px;align-items:baseline}
+  .statusline .clear-all{
+    color:var(--accent-text); text-decoration:underline; text-decoration-style:dotted;
+    text-underline-offset:3px; cursor:pointer; background:none; border:none;
+    font:inherit; font-size:13px; padding:0;
+  }
+  .statusline .clear-all:hover{color:var(--accent)}
 
-  /* results */
   main{padding:14px 0 30px}
   #state{padding:30px 4px;color:var(--muted);text-align:center}
   #state.error{color:var(--danger)}
@@ -92,34 +95,32 @@
   #list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
   .empty{padding:26px 4px;color:var(--muted);text-align:center}
 
-  /* card */
   .card{
     background:var(--panel);border:1px solid var(--line);border-left:5px solid var(--accent);
     border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow);
     transition: border-left-color 0.2s;
   }
-  .card.lvl-1 { border-left-color: #2b6cb0; }
-  .card.lvl-2 { border-left-color: #3182ce; }
-  .card.lvl-3 { border-left-color: #4299e1; }
-  .card.lvl-4 { border-left-color: #63b3ed; }
-
+  .card.lvl-1{border-left-color:var(--lvl-1)}
+  .card.lvl-2{border-left-color:var(--lvl-2)}
+  .card.lvl-3{border-left-color:var(--lvl-3)}
+  .card.lvl-4{border-left-color:var(--lvl-4)}
   .card.highlight{outline:3px solid var(--accent);outline-offset:2px}
   .card-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-  
-  .code-btn {
+
+  .code{
     font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.4px;
     border:1px solid transparent;border-radius:8px;padding:4px 9px;cursor:pointer;
     background:var(--code-bg);color:var(--code-fg);white-space:nowrap;
     transition:all 0.15s;
   }
-  .code-btn:hover{border-color:var(--code);background:#d1e0d3}
-  
-  .msko-badge {
+  .code:hover{border-color:var(--code);background:#d1e0d3}
+
+  .msko-badge{
     font-family:var(--mono);font-size:12px;border-radius:6px;padding:3px 6px;
     background:var(--msko-bg);color:var(--msko-fg);white-space:nowrap;
   }
 
-  .badge-lvl {
+  .badge-lvl{
     font:inherit;font-size:12px;border-radius:999px;padding:4px 10px;
     background:#edf2f7;color:#4a5568;white-space:nowrap;
   }
@@ -130,27 +131,27 @@
     transition:all 0.15s;
   }
   .badge-sec:hover{border-color:var(--sec);background:#eaddff}
-  
-  .actions-group { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
-  
-  .btn-small{
-    border:1px dashed var(--line-strong);background:#f7fafc;color:var(--muted);
+
+  .copy-full{
+    margin-left:auto;border:1px dashed var(--line-strong);background:#f7fafc;color:var(--muted);
     border-radius:8px;padding:4px 9px;cursor:pointer;font:inherit;font-size:13px;white-space:nowrap;
-    display:inline-flex; align-items:center; gap:4px;
   }
-  .btn-small:hover{border-color:var(--accent);color:var(--accent-text);background:var(--accent-weak)}
-  
+  .copy-full:hover{border-color:var(--accent);color:var(--accent-text);background:var(--accent-weak)}
+
   .name{margin-top:9px;font-size:15.5px;font-weight:650;word-break:break-word}
   mark{background:var(--mark);border-radius:3px;padding:0 1px;color:inherit}
 
-  .path{
-    margin-top:8px; font-size:13px; color:var(--muted); display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  .card-actions{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;
+    padding-top:10px; border-top:1px dashed var(--line);
+    align-items:center;
   }
-  .path-btn{
-    background:none; border:none; padding:0; font:inherit; color:var(--accent-text);
-    text-decoration:underline; cursor:pointer; text-decoration-style:dotted;
+  .btn-small{
+    border:1px solid var(--line-strong); background:var(--panel); color:var(--accent-text);
+    border-radius:8px; padding:5px 10px; font:inherit; font-size:13px; cursor:pointer;
+    transition:all 0.15s;
   }
-  .path-btn:hover{color:var(--accent)}
+  .btn-small:hover{border-color:var(--accent); background:var(--accent-weak)}
 
   .more{display:flex;justify-content:center;margin:16px 0 4px}
   .more button{
@@ -159,18 +160,17 @@
   }
   .more button:hover{border-color:var(--accent);background:var(--accent-weak)}
 
-  /* footer */
   footer{border-top:1px solid var(--line);background:var(--panel)}
   footer .wrap{padding:18px 16px 30px;color:var(--muted);font-size:14px}
   footer h4{margin:0 0 8px;color:var(--text);font-size:15px}
-  footer .lead{margin:0 0 12px;color:var(--text)}
+  footer .lead{margin:0 0 6px;color:var(--text)}
   footer .lead b{font-weight:600}
+  footer .date-foot{margin:0 0 12px;color:var(--muted);font-size:13.5px}
   footer .links{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;margin:0 0 10px}
   footer .links .cap{color:var(--muted)}
   footer .links a{white-space:nowrap}
-  footer .disc{margin:10px 0 0;font-size:13px;color:#718096;line-height: 1.5;}
+  footer .disc{margin:10px 0 0;font-size:13px;color:#718096;line-height:1.5}
 
-  /* floating buttons + toast */
   .fab{position:fixed;right:16px;display:flex;flex-direction:column;gap:8px;z-index:40}
   .fab.up{bottom:74px}.fab.down{bottom:16px}
   .fab button{
@@ -186,24 +186,19 @@
   }
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  
-  
-
-  @media (max-width:720px){
+  @media (max-width:640px){
     .hero h1{font-size:25px}
     .row1{flex-direction:column;align-items:stretch}
     .row1>*{width:100%}
     .searchbox{flex:auto}
     select.filters{width:100%;flex:auto; margin-bottom:6px;}
-    .statusline{flex-direction:column;gap:2px}
-    .statusline .date{text-align:left}
-    .actions-group{width:100%; margin-left:0; justify-content:flex-start; margin-top: 6px;}
-
+    .statusline{flex-direction:column;gap:6px}
+    .statusline .actions{flex-wrap:wrap}
+    .copy-full{margin-left:0}
   }
 </style>
 </head>
 <body>
-<!-- Версия каталога после добавления ОКСО — ?v=3.0.0. -->
 <script src="https://prog815.github.io/common-menu/menu.js?v=3.0.0"></script>
 <script src="https://prog815.github.io/common-menu/share.js?v=1.0.0"></script>
 <common-projects-menu></common-projects-menu>
@@ -211,19 +206,20 @@
 <div class="wrap hero">
   <h1>ОКСО</h1>
   <p>Общероссийский классификатор специальностей по образованию (ОК 009-2016).
-     Поиск по <b>коду</b> (официальному и внутреннему) и <b>наименованию</b>.
-     Иерархия из 4 уровней: <b>разделы I–IX</b>, области, укрупнённые группы и специальности.</p>
+     Поиск по <b>коду</b>, <b>наименованию</b> и кодам <b>МСКО</b>.
+     Все записи из 9 разделов — плоским списком карточек.</p>
 
   <div class="notice">
     <b>ОКСО — это код специальности или направления подготовки.</b>
-    Для поиска по профессиям и должностям используйте <a href="https://prog815.github.io/okz/">ОКЗ</a>.
+    Для поиска по занятиям и профессиям используйте
+    <a href="https://prog815.github.io/okz/">ОКЗ</a>.
   </div>
 
   <div class="hints">
-    Форматы запроса: <span class="mono">1.05.01.01</span> ·
-    <span class="mono">09.02.01</span> ·
-    <span class="mono">бакалавриат</span> ·
-    <span class="mono">768</span> (МСКО)
+    Форматы запроса: <span class="mono">I.1.05.01.01</span> ·
+    <span class="mono">1.05.01.01</span> ·
+    <span class="mono">768</span> (МСКО) ·
+    <span class="mono">экономика</span>
   </div>
 </div>
 
@@ -231,36 +227,29 @@
   <div class="wrap">
     <div class="row1">
       <div class="searchbox" id="searchbox">
-        <input id="q" type="search" autocomplete="off" spellcheck="false"
+        <input id="q" type="text" autocomplete="off" spellcheck="false"
                placeholder="Код (например, 1.05.01.01) или название"
                aria-label="Поиск по ОКСО">
-        <button class="clear" id="clear" type="button" title="Очистить запрос" aria-label="Очистить запрос">×</button>
+        <button class="clear-btn" id="clear-btn" type="button" title="Очистить запрос" aria-label="Очистить запрос">✕</button>
       </div>
       <select id="section-filter" class="filters" aria-label="Фильтр по разделу">
         <option value="">Все разделы</option>
       </select>
-      <select id="level-filter" class="filters" aria-label="Фильтр по уровню">
-        <option value="">Все уровни</option>
-        <option value="1">1 — Раздел</option>
-        <option value="2">2 — Область образования</option>
-        <option value="3">3 — Укрупнённая группа</option>
-        <option value="4">4 — Специальность</option>
-      </select>
     </div>
     <div class="statusline">
       <div class="found" id="found">Загрузка…</div>
-      <div class="date" id="dateLine"></div>
+      <div class="actions">
+        <button class="clear-all" id="clear-all" type="button" title="Сбросить поиск и фильтр раздела">Очистить</button>
+      </div>
     </div>
   </div>
 </div>
 
 <main class="wrap">
-  <div id="listView">
-    <div id="state">Загрузка данных справочника…</div>
-    <ul id="list" hidden></ul>
-    <div class="more" id="moreWrap" hidden>
-      <button id="more" type="button">Показать ещё</button>
-    </div>
+  <div id="state">Загрузка данных справочника…</div>
+  <ul id="list" hidden></ul>
+  <div class="more" id="moreWrap" hidden>
+    <button id="more" type="button">Показать ещё</button>
   </div>
 </main>
 
@@ -268,19 +257,16 @@
   <div class="wrap">
     <h4>О справочнике</h4>
     <p class="lead" id="footLead"></p>
-    <div class="links">
+    <p class="date-foot" id="footDate"></p>
+    <div class="links" id="footPrimary">
       <span class="cap">Источник данных (машиночитаемый снимок):</span>
-      <a href="https://classifikators.ru/okso" rel="noopener" target="_blank">classifikators.ru — ОКСО</a>
     </div>
-    <div class="links" id="footSources">
-      <span class="cap">Текстовые редакции для сверки:</span>
+    <div class="links" id="footSecondary">
+      <span class="cap">Первоисточники и текстовые редакции для сверки:</span>
     </div>
     <p class="disc" id="footDisc"></p>
   </div>
 </footer>
-
-<!-- Модальное окно "Поделиться" -->
-
 
 <div class="fab up"><button id="toTop" type="button" title="Наверх" aria-label="Наверх">↑</button></div>
 <div class="fab down"><button id="toBottom" type="button" title="Вниз" aria-label="Вниз">↓</button></div>
@@ -299,33 +285,43 @@
   var PAGE_SIZE = 20;
   var DEBOUNCE_MS = 180;
   var SCROLL_THRESHOLD = 300;
-  var EMPTY_PQ = {digits:"", tokens:[], rawTerms:[], full:""};
+  var TOAST_MS = 1800;
+  var HIGHLIGHT_MS = 1800;
 
-  // [code, name, level, parent, isLeaf, section, officialCode, msko2011, mskoO2013, sourceOrder]
-  var F_CODE=0, F_NAME=1, F_LEVEL=2, F_PARENT=3, F_LEAF=4, F_SECTION=5, F_OFFICIAL=6, F_MSKO11=7, F_MSKO13=8;
+  var F_CODE=0, F_NAME=1, F_LEVEL=2, F_PARENT=3, F_LEAF=4,
+      F_SECTION=5, F_OFFICIAL=6, F_MSKO11=7, F_MSKO13=8, F_ORDER=9;
 
   var LEVEL_NAMES = {
-    "1": "Раздел", "2": "Область", "3": "Укрупнённая группа", "4": "Специальность"
+    "1": "Раздел",
+    "2": "Область",
+    "3": "Укрупнённая группа",
+    "4": "Специальность"
   };
+
+  var DEFAULT_PRIMARY_SOURCES = [
+    { name: "Росстандарт (ОК 009-2016)", url: "https://protect.gost.ru/", role: "primary" },
+    { name: "classifikators.ru (машиночитаемый снимок)", url: "https://classifikators.ru/okso", role: "secondary" },
+    { name: "Гарант (ОК 009-2016)", url: "https://internet.garant.ru/#/document/71594768", role: "secondary" },
+    { name: "КонсультантПлюс (ОК 009-2016)", url: "https://www.consultant.ru/document/cons_doc_LAW_212200/", role: "secondary" },
+    { name: "Кодекс (ОК 009-2016)", url: "https://docs.cntd.ru/document/456069557", role: "secondary" }
+  ];
 
   var RECORDS = [];
   var BY_CODE = {};
+  var BY_OFFICIAL = {};
   var filtered = [];
   var shown = PAGE_SIZE;
   var META = null;
-  var pendingFocusCode = "";
+  var activeDeepLinkCode = null;
 
-
-  var $ = function(id){return document.getElementById(id);};
-  var elState=$("state"), elList=$("list"), elMoreWrap=$("moreWrap"), elMore=$("more");
-  var elQ=$("q"), elClear=$("clear"), elBox=$("searchbox"), 
-      elSec=$("section-filter"), elLevel=$("level-filter"),
-      elFound=$("found"), elDate=$("dateLine"),
-      elFootLead=$("footLead"), elFootSources=$("footSources"),
-      elFootDisc=$("footDisc"), elToast=$("toast"),
-      elTop=$("toTop"), elBottom=$("toBottom");
-      
-
+  var $ = function(id){ return document.getElementById(id); };
+  var elState = $("state"), elList = $("list"), elMoreWrap = $("moreWrap"), elMore = $("more");
+  var elQ = $("q"), elClearBtn = $("clear-btn"), elBox = $("searchbox");
+  var elSection = $("section-filter");
+  var elFound = $("found"), elClearAll = $("clear-all");
+  var elFootLead = $("footLead"), elFootDate = $("footDate");
+  var elFootPrimary = $("footPrimary"), elFootSecondary = $("footSecondary"), elFootDisc = $("footDisc");
+  var elToast = $("toast"), elTop = $("toTop"), elBottom = $("toBottom");
 
   function norm(s){
     s = String(s==null?"":s).toLowerCase().replace(/ё/g,"е");
@@ -340,7 +336,7 @@
   }
   function escRe(s){ return String(s).replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); }
   function fmtNum(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,"\u00a0"); }
-  function plural(n,forms){
+  function plural(n, forms){
     var n10=n%10, n100=n%100;
     if(n10===1 && n100!==11) return forms[0];
     if(n10>=2 && n10<=4 && (n100<10||n100>=20)) return forms[1];
@@ -355,6 +351,9 @@
     var n = norm(text);
     return n ? n.split(" ").filter(Boolean) : [];
   }
+  // Внутренний код (с римским префиксом раздела) — основной отображаемый код.
+  // Официальный код (X.YY.ZZ.WW) — только в тултипе.
+  function displayCodeOf(rec){ return rec.code; }
 
   async function fetchJson(gzUrl, jsonUrl){
     try{
@@ -367,7 +366,7 @@
           return JSON.parse(text);
         }
       }
-    }catch(e){ /* fallback */ }
+    }catch(e){}
     var r2 = await fetch(jsonUrl,{cache:"no-store"});
     if(!r2.ok) throw new Error("не удалось получить файл, код ответа "+r2.status);
     return await r2.json();
@@ -376,7 +375,7 @@
   async function loadAll(){
     elState.hidden=false; elState.className=""; elState.textContent="Загрузка данных справочника…";
     elList.hidden=true; elList.innerHTML=""; elMoreWrap.hidden=true; elMore.textContent="";
-    elFound.textContent="Загрузка…"; elDate.textContent="";
+    elFound.textContent="Загрузка…";
 
     var data, meta=null;
     try{
@@ -395,61 +394,80 @@
     initUI();
     buildIndexes(data);
     renderFooter();
-    renderDateLine();
     parseUrlAndApply();
   }
 
-  function initUI() {
-    elSec.innerHTML = '<option value="">Все разделы</option>';
-    if (META && META.sections) {
-      META.sections.forEach(function(s) {
-        var opt = document.createElement("option");
-        opt.value = s.roman;
-        var shortName = s.name.length > 40 ? s.name.substring(0, 37) + "…" : s.name;
-        opt.textContent = s.roman + " — " + shortName + " (" + s.count + ")";
-        opt.title = s.name;
-        elSec.appendChild(opt);
-      });
-    }
+  function initUI(){
+    elSection.innerHTML = '<option value="">Все разделы</option>';
+    var sections = (META && META.sections) || [];
+    sections.forEach(function(s){
+      var roman = s.roman || "";
+      var name = s.name || "";
+      var count = s.count || 0;
+      if (!roman) return;
+      var opt = document.createElement("option");
+      opt.value = roman;
+      var shortName = name.length > 40 ? name.substring(0, 37) + "…" : name;
+      opt.textContent = roman + " — " + shortName + " (" + count + ")";
+      opt.title = name;
+      elSection.appendChild(opt);
+    });
   }
 
   function buildIndexes(arr){
-    RECORDS = []; BY_CODE = {};
-    if(!Array.isArray(arr)) arr=[];
+    RECORDS = []; BY_CODE = {}; BY_OFFICIAL = {};
+    if(!Array.isArray(arr)) arr = [];
 
-    for(var i=0;i<arr.length;i++){
-      var it = arr[i]||[];
+    arr.forEach(function(it){
+      it = it || [];
       var code = String(it[F_CODE]==null?"":it[F_CODE]).trim();
+      if (!code) return;
       var name = String(it[F_NAME]==null?"":it[F_NAME]).trim();
       var level = String(it[F_LEVEL]==null?"":it[F_LEVEL]).trim();
-      var parent = String(it[F_PARENT]==null?"":it[F_PARENT]).trim();
       var section = String(it[F_SECTION]==null?"":it[F_SECTION]).trim();
       var official = String(it[F_OFFICIAL]==null?"":it[F_OFFICIAL]).trim();
       var msko11 = String(it[F_MSKO11]==null?"":it[F_MSKO11]).trim();
-      var msko13 = String(it[F_MSKO13]==null?"":it[F_MSKO13]).trim();
-
-      if(!code) continue;
-
-      var nName = norm(name);
-      var words = extractWords(name);
+      var mskoO13 = String(it[F_MSKO13]==null?"":it[F_MSKO13]).trim();
+      var order = parseInt(it[F_ORDER], 10);
+      if (isNaN(order)) order = 0;
 
       var codeDigits = code.replace(/\D/g, "");
       var officialDigits = official.replace(/\D/g, "");
 
       var rec = {
-        code: code, 
-        codeDigits: codeDigits,
-        official: official, 
-        officialDigits: officialDigits,
-        name: name, level: level, parent: parent, section: section,
-        msko11: msko11, msko13: msko13,
-        nName: nName, words: words,
-        searchBlob: norm(code + " " + codeDigits + " " + official + " " + officialDigits + " " + msko11 + " " + msko13 + " " + name)
+        code: code, name: name, level: level, section: section,
+        official: official, msko11: msko11, mskoO13: mskoO13,
+        sourceOrder: order,
+        codeDigits: codeDigits, officialDigits: officialDigits,
+        nName: norm(name),
+        words: extractWords(name),
+        searchBlob: norm(code + " " + codeDigits + " " + official + " " +
+                         officialDigits + " " + msko11 + " " + mskoO13 + " " + name)
       };
-
       RECORDS.push(rec);
       BY_CODE[code] = rec;
+
+      if (official) {
+        var okey = official.toUpperCase();
+        if (!BY_OFFICIAL[okey]) BY_OFFICIAL[okey] = rec;
+      }
+    });
+
+    RECORDS.sort(function(a,b){ return a.sourceOrder - b.sourceOrder; });
+  }
+
+  function resolveCodeInput(raw){
+    var s = String(raw||"").trim();
+    if (!s) return null;
+    // 1) Внутренний код (I.1.05.01.01) — точное совпадение, case-insensitive.
+    if (BY_CODE[s]) return BY_CODE[s];
+    var upper = s.toUpperCase();
+    for (var k in BY_CODE){
+      if (k.toUpperCase() === upper) return BY_CODE[k];
     }
+    // 2) Официальный код (1.05.01.01) — первая запись по sourceOrder.
+    if (BY_OFFICIAL[upper]) return BY_OFFICIAL[upper];
+    return null;
   }
 
   function prepareQuery(q){
@@ -458,14 +476,18 @@
     var n = norm(raw);
     var tokens = n ? n.split(" ").filter(Boolean) : [];
     var rawTerms = raw.trim().split(/\s+/).filter(Boolean);
+    return { digits: digits, tokens: tokens, rawTerms: rawTerms, full: tokens.join(" ") };
+  }
 
-    return {digits:digits, tokens:tokens, rawTerms:rawTerms, full:tokens.join(" ")};
+  function isCodeOnlyQuery(pq){
+    return pq.rawTerms.length > 0 && pq.rawTerms.every(function(t){
+      return /^[\d\s\.\-;,/]+$/.test(t);
+    });
   }
 
   function tokenMatches(token, rec){
     if(!token) return true;
     if(rec.searchBlob.indexOf(token) >= 0) return true;
-
     var words = rec.words || [];
     for(var i=0;i<words.length;i++){
       if(commonPrefixOk(token, words[i])) return true;
@@ -474,13 +496,13 @@
   }
 
   function scoreRecord(r, pq){
-    var score=0;
+    if (activeDeepLinkCode !== null){
+      return r.code === activeDeepLinkCode ? 100 : null;
+    }
 
-    var isCodeOnly = pq.rawTerms.length > 0 && pq.rawTerms.every(function(t){ 
-      return /^[\d\s\.]+$/.test(t); 
-    });
+    var codeOnly = isCodeOnlyQuery(pq);
 
-    if (isCodeOnly && pq.digits) {
+    if (codeOnly && pq.digits){
       if (r.officialDigits === pq.digits) return 100;
       if (r.codeDigits === pq.digits) return 100;
       if (r.officialDigits.indexOf(pq.digits) === 0) return 75;
@@ -488,61 +510,57 @@
       return null;
     }
 
-    var queryUpper = pq.rawTerms.join(" ").toUpperCase();
-    if (r.code === queryUpper || r.official === queryUpper) return 100;
-
-    if(pq.digits){
-      if(r.officialDigits === pq.digits) score += 100;
-      else if(r.codeDigits === pq.digits) score += 100;
-      else if(r.officialDigits.indexOf(pq.digits) === 0) score += 75;
-      else if(r.codeDigits.indexOf(pq.digits) === 0) score += 75;
+    var score = 0;
+    if (pq.digits){
+      if (r.officialDigits === pq.digits) score += 100;
+      else if (r.codeDigits === pq.digits) score += 100;
+      else if (r.officialDigits.indexOf(pq.digits) === 0) score += 75;
+      else if (r.codeDigits.indexOf(pq.digits) === 0) score += 75;
     }
 
-    if(pq.tokens.length){
+    if (pq.tokens.length){
       for(var ti=0; ti<pq.tokens.length; ti++){
         if(!tokenMatches(pq.tokens[ti], r)) return null;
       }
     }
 
-    if(pq.full){
-      if(r.nName === pq.full) score += 60;
-      else if(r.nName.indexOf(pq.full) === 0) score += 50;
-      else if(r.nName.indexOf(pq.full) >= 0) score += 35;
+    if (pq.full){
+      if (r.nName === pq.full) score += 60;
+      else if (r.nName.indexOf(pq.full) === 0) score += 50;
+      else if (r.nName.indexOf(pq.full) >= 0) score += 35;
     }
 
     for(var k=0;k<pq.tokens.length;k++){
       var t = pq.tokens[k];
-      if(r.nName.indexOf(t) >= 0) score += 5;
+      if (r.nName.indexOf(t) >= 0) score += 5;
     }
 
-    if(score <= 0) return null;
+    if (score <= 0) return null;
     return score;
   }
 
   function applyFilters(){
     var pq = prepareQuery(elQ.value);
     var hasQuery = !!(pq.digits || pq.tokens.length);
-    var secFilter = elSec.value;
-    var levelFilter = elLevel.value;
+    var sectionFilter = elSection.value;
 
-    var base = RECORDS.filter(function(r) {
-      if (secFilter && r.section !== secFilter) return false;
-      if (levelFilter && r.level !== levelFilter) return false;
+    var base = RECORDS.filter(function(r){
+      if (sectionFilter && r.section !== sectionFilter) return false;
       return true;
     });
 
-    if(hasQuery){
-      var scored=[];
+    if (hasQuery || activeDeepLinkCode !== null){
+      var scored = [];
       for(var a=0;a<base.length;a++){
         var s = scoreRecord(base[a], pq);
-        if(s!==null) scored.push({r:base[a], s:s});
+        if (s !== null) scored.push({ r: base[a], s: s });
       }
       scored.sort(function(x,y){
-        if(y.s !== x.s) return y.s - x.s;
-        return x.r.code < y.r.code ? -1 : x.r.code > y.r.code ? 1 : 0;
+        if (y.s !== x.s) return y.s - x.s;
+        return x.r.sourceOrder - y.r.sourceOrder;
       });
-      filtered = scored.map(function(o){return o.r;});
-    }else{
+      filtered = scored.map(function(o){ return o.r; });
+    } else {
       filtered = base;
     }
 
@@ -553,10 +571,16 @@
     renderList();
   }
 
+  function computeHighlightDigits(pq){
+    if (activeDeepLinkCode !== null) return "";
+    if (!pq || !pq.digits) return "";
+    return pq.digits;
+  }
+
   function renderList(){
-    var pq = filtered._pq || EMPTY_PQ;
+    var pq = filtered._pq || { digits:"", tokens:[], rawTerms:[], full:"" };
     var terms = pq.rawTerms || [];
-    var digits = pq.digits || "";
+    var digits = computeHighlightDigits(pq);
     var total = filtered.length;
 
     if(total===0){
@@ -572,10 +596,9 @@
     elFound.innerHTML = "Найдено: <b>"+fmtNum(total)+"</b> · Показано: <b>"+fmtNum(visible)+"</b>";
 
     elState.hidden=true; elList.hidden=false;
-    var frag = document.createDocumentFragment();
     var slice = filtered.slice(0, shown);
-    for(var j=0;j<slice.length;j++) frag.appendChild(buildCard(slice[j], terms, digits));
-    elList.innerHTML=""; elList.appendChild(frag);
+    elList.innerHTML = slice.map(function(r){ return cardHtml(r, terms, digits); }).join("");
+    bindShareButtons();
 
     if(visible < total){
       var next = Math.min(shown+PAGE_SIZE, total);
@@ -591,26 +614,26 @@
   function hlText(text, rawTerms){
     var safe = escHtml(text);
     if(!rawTerms || !rawTerms.length) return safe;
-    var re = new RegExp("("+rawTerms.map(escRe).join("|")+")","gi");
-    return safe.replace(re,"<mark>$1</mark>");
+    try{
+      var re = new RegExp("("+rawTerms.map(escRe).join("|")+")","gi");
+      return safe.replace(re,"<mark>$1</mark>");
+    }catch(e){ return safe; }
   }
-  
   function hlCode(code, digits){
     if (!digits) return escHtml(code);
-    var codeDigits = code.replace(/\D/g, "");
+    var codeDigits = String(code).replace(/\D/g, "");
     var idx = codeDigits.indexOf(digits);
     if (idx < 0) return escHtml(code);
-    
+
     var result = "";
     var digitCount = 0;
-    var start = idx;
     var end = idx + digits.length;
     var inMark = false;
-    
+
     for (var i = 0; i < code.length; i++) {
       var ch = code[i];
       if (/\d/.test(ch)) {
-        if (digitCount >= start && digitCount < end) {
+        if (digitCount >= idx && digitCount < end) {
           if (!inMark) { result += "<mark>"; inMark = true; }
           result += escHtml(ch);
         } else {
@@ -626,297 +649,314 @@
     return result;
   }
 
-  function buildCard(r, terms, digits){
-    var li = document.createElement("li");
-    var card = document.createElement("article");
-    card.className = "card lvl-" + r.level;
-    card.dataset.code = r.code;
-
-    var top = document.createElement("div"); top.className="card-top";
-
-    var displayCode = r.official ? r.official : r.code;
-    var codeBtn = document.createElement("button");
-    codeBtn.type="button"; codeBtn.className="code-btn";
-    codeBtn.innerHTML = hlCode(displayCode, digits);
-    codeBtn.title = "Копировать код: " + displayCode;
-    codeBtn.dataset.act = "copy-code"; codeBtn.dataset.val = displayCode;
-    top.appendChild(codeBtn);
-
-    if (r.msko11) {
-      var m1 = document.createElement("span");
-      m1.className = "msko-badge";
-      m1.textContent = "МСКО: " + r.msko11;
-      m1.title = "МСКО 2011: " + r.msko11;
-      top.appendChild(m1);
-    }
-    if (r.msko13) {
-      var m2 = document.createElement("span");
-      m2.className = "msko-badge";
-      m2.textContent = "Обл: " + r.msko13;
-      m2.title = "МСКО-О 2013: " + r.msko13;
-      top.appendChild(m2);
-    }
-
-    var lvlBadge = document.createElement("span");
-    lvlBadge.className = "badge-lvl";
-    lvlBadge.textContent = r.level + " · " + (LEVEL_NAMES[r.level] || "Группа");
-    top.appendChild(lvlBadge);
-
-    if (r.section && META && META.sections) {
-      var secData = META.sections.find(function(x){return x.roman === r.section;});
-      if (secData) {
-        var secBadge = document.createElement("button");
-        secBadge.type="button"; secBadge.className="badge-sec";
-        var shortName = secData.name.split(" ")[0];
-        secBadge.textContent = "§" + r.section + " " + shortName;
-        secBadge.title = "Показать только раздел: " + secData.name;
-        secBadge.dataset.act = "filter-sec"; secBadge.dataset.val = r.section;
-        top.appendChild(secBadge);
-      }
-    }
-
-    var actions = document.createElement("div");
-    actions.className = "actions-group";
-
-    // Оборачиваем кнопку в веб-компонент
-    var shareWrap = document.createElement("klassik-share");
-    shareWrap.setAttribute("catalog", "okso");
-    shareWrap.setAttribute("title", "ОКСО: " + displayCode + " — " + r.name);
-    shareWrap.setAttribute("text", buildShareText(r));
-    shareWrap.setAttribute("url", location.origin + location.pathname + "?code=" + encodeURIComponent(r.code));
-
-    var shareBtn = document.createElement("button");
-    shareBtn.type = "button"; 
-    shareBtn.className = "btn-small";
-    shareBtn.innerHTML = "📤 Поделиться";
-    shareBtn.title = "Отправить карточку коллегам";
-    
-    shareWrap.appendChild(shareBtn);
-    actions.appendChild(shareWrap);
-
-    var copyFull = document.createElement("button");
-    copyFull.type="button"; copyFull.className="btn-small";
-    var fullVal = displayCode + "; " + r.name;
-    copyFull.textContent = "📋 строка";
-    copyFull.title = "Скопировать: " + fullVal;
-    copyFull.dataset.act = "copy-full"; copyFull.dataset.val = fullVal;
-    actions.appendChild(copyFull);
-
-    top.appendChild(actions);
-    card.appendChild(top);
-
-    var name = document.createElement("div"); name.className="name";
-    name.innerHTML = hlText(r.name, terms);
-    card.appendChild(name);
-
-    if (r.parent && BY_CODE[r.parent]) {
-      var parentRec = BY_CODE[r.parent];
-      var path = document.createElement("div"); path.className="path";
-      path.innerHTML = '<span>Родитель: </span>';
-      var pBtn = document.createElement("button");
-      pBtn.type = "button"; pBtn.className="path-btn";
-      pBtn.textContent = "[" + (parentRec.official || parentRec.code) + "] " + parentRec.name;
-      
-      if (parentRec.level === "1") {
-        pBtn.dataset.act = "filter-sec";
-        pBtn.dataset.val = parentRec.section;
-      } else {
-        pBtn.dataset.act = "open-code";
-        pBtn.dataset.val = r.parent;
-      }
-      path.appendChild(pBtn);
-      card.appendChild(path);
-    }
-
-    li.appendChild(card);
-    return li;
+  function buildRowText(rec){
+    return displayCodeOf(rec) + "; " + rec.name;
   }
 
-  function renderDateLine(){
-    var parts=[];
-    if(META && META.standard) parts.push(META.standard);
-    if(META && META.effective_date_display) {
-      parts.push("введён " + META.effective_date_display);
-    }
-    elDate.textContent = parts.join(" · ");
+  function cardHtml(rec, terms, digits){
+    var displayCode = displayCodeOf(rec);
+    var lvlName = LEVEL_NAMES[rec.level] || "Группа";
+    var lvlHtml = '<span class="badge-lvl" title="Уровень '+rec.level+' — '+escHtml(lvlName)+'">'+
+                  rec.level+' · '+escHtml(lvlName)+'</span>';
 
-    var titleParts=[];
-    if(META && META.standard_line) titleParts.push(META.standard_line);
-    if(META && META.provenance) titleParts.push(META.provenance);
-    elDate.title = titleParts.join(" | ");
+    var secHtml = "";
+    var secData = (META && META.sections)
+      ? META.sections.find(function(s){ return s.roman === rec.section; })
+      : null;
+    if (secData){
+      var shortName = secData.name.split(" ")[0];
+      secHtml = '<button type="button" class="badge-sec" data-act="filter-sec" data-val="'+escHtml(rec.section)+'"'+
+                ' title="Показать только раздел: '+escHtml(secData.name)+'">§'+escHtml(rec.section)+' '+escHtml(shortName)+'</button>';
+    }
+
+    var mskoHtml = "";
+    if (rec.msko11){
+      mskoHtml += '<span class="msko-badge" title="МСКО 2011: '+escHtml(rec.msko11)+'">МСКО: '+escHtml(rec.msko11)+'</span>';
+    }
+    if (rec.mskoO13){
+      mskoHtml += '<span class="msko-badge" title="МСКО-О 2013: '+escHtml(rec.mskoO13)+'">МСКО-О: '+escHtml(rec.mskoO13)+'</span>';
+    }
+
+    var codeTitle = "Копировать код: " + displayCode;
+    if (rec.official && rec.official !== rec.code && rec.official.length > 1){
+      codeTitle += " (официальный код: " + rec.official + ")";
+    }
+
+    var rowText = buildRowText(rec);
+
+    return '<li>' +
+      '<article class="card lvl-'+escHtml(rec.level)+'" data-code="'+escHtml(rec.code)+'">' +
+        '<div class="card-top">' +
+          '<button type="button" class="code" data-act="copy-code" data-val="'+escHtml(displayCode)+'" title="'+escHtml(codeTitle)+'">'+hlCode(displayCode, digits)+'</button>' +
+          lvlHtml +
+          secHtml +
+          mskoHtml +
+          '<button type="button" class="copy-full" data-act="copy-full" data-val="'+escHtml(rowText)+'" title="Скопировать строку: '+escHtml(rowText)+'">📋 строка</button>' +
+        '</div>' +
+        '<div class="name">'+hlText(rec.name, terms)+'</div>' +
+        '<div class="card-actions">' +
+          '<span class="share-slot" data-code="'+escHtml(rec.code)+'"></span>' +
+        '</div>' +
+      '</article>' +
+    '</li>';
+  }
+
+  function bindShareButtons(){
+    if (!window.customElements || !customElements.get("klassik-share")){
+      return;
+    }
+    var slots = document.querySelectorAll(".share-slot");
+    for (var i=0;i<slots.length;i++){
+      var slot = slots[i];
+      var code = slot.dataset.code;
+      var rec = BY_CODE[code];
+      if (!rec) continue;
+
+      var wrap = document.createElement("klassik-share");
+      wrap.setAttribute("catalog", "okso");
+      wrap.setAttribute("title", "ОКСО: " + displayCodeOf(rec) + " — " + rec.name);
+      wrap.setAttribute("text", buildRowText(rec));
+      wrap.setAttribute("url", location.origin + location.pathname + "?code=" + encodeURIComponent(rec.code));
+
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-small";
+      btn.textContent = "📤 Поделиться";
+      btn.title = "Поделиться карточкой: " + displayCodeOf(rec) + " — " + rec.name;
+      wrap.appendChild(btn);
+
+      slot.parentNode.replaceChild(wrap, slot);
+    }
   }
 
   function renderFooter(){
     var total = RECORDS.length;
-    var secCount = (META && META.sections_count) ? META.sections_count : 9;
-    var s = "В справочнике "+fmtNum(total)+" "+plural(total,["запись","записи","записей"])+
-            " и "+secCount+" "+plural(secCount,["раздел","раздела","разделов"])+".";
-    elFootLead.innerHTML = escHtml(s).replace(/(\d[\d\u00a0.]*)/g,"<b>$1</b>");
+    var sections = (META && META.sections) || [];
+    var sectionsCount = sections.length || 9;
+    var levelsCount = (META && META.levels_count) ? Object.keys(META.levels_count).length : 4;
 
-    if (META && META.primary_sources) {
-      var linksHtml = '<span class="cap">Текстовые редакции для сверки:</span>';
-      META.primary_sources.forEach(function(src) {
-        if (!src.url.includes("classifikators")) {
-          linksHtml += ' <a href="'+src.url+'" rel="noopener" target="_blank">'+escHtml(src.name.split(" ")[0])+'</a>';
-        }
-      });
-      linksHtml += ' <a href="https://github.com/prog815/okso" rel="noopener" target="_blank">О справочнике</a>';
-      elFootSources.innerHTML = linksHtml;
+    elFootLead.innerHTML =
+      "В справочнике <b>"+fmtNum(total)+"</b> "+plural(total, ["запись","записи","записей"])+
+      ", <b>"+sectionsCount+"</b> "+plural(sectionsCount, ["раздел","раздела","разделов"])+
+      " и <b>"+levelsCount+"</b> "+plural(levelsCount, ["уровень","уровня","уровней"])+" иерархии.";
+
+    if (META && META.change_display){
+      elFootDate.textContent = META.change_display;
+    } else if (META && META.standard && META.effective_date_display){
+      elFootDate.textContent = META.standard + " · введён " + META.effective_date_display;
+    } else if (META && META.source_date_display){
+      elFootDate.textContent = "Снимок от " + META.source_date_display;
+    } else {
+      elFootDate.textContent = "Дата актуальности: не определена";
+    }
+    if (META && META.standard_line){
+      elFootDate.title = META.standard_line;
     }
 
-    var disc = (META && META.disclaimer)
-      ? META.disclaimer
+    var sources = DEFAULT_PRIMARY_SOURCES.slice();
+    if (META && Array.isArray(META.primary_sources)){
+      META.primary_sources.forEach(function(src){
+        var existing = sources.find(function(d){ return d.url === src.url; });
+        if (existing){
+          if (src.role) existing.role = src.role;
+          if (src.name) existing.name = src.name;
+        } else {
+          sources.push(src);
+        }
+      });
+    }
+
+    var primaryList = sources.filter(function(s){
+      if (!s.url) return false;
+      if (s.url.indexOf("gost.ru") >= 0) return false;
+      if (s.url.indexOf("classifikators.ru") >= 0) return true;
+      return false;
+    });
+
+    var secondaryList = sources.filter(function(s){
+      if (!s.url) return false;
+      if (s.url.indexOf("gost.ru") >= 0) return false;
+      if (s.url.indexOf("classifikators.ru") >= 0) return false;
+      return true;
+    });
+
+    elFootPrimary.innerHTML = '<span class="cap">Источник данных (машиночитаемый снимок):</span>' +
+      primaryList.map(function(s){
+        return '<a href="'+escHtml(s.url)+'" rel="noopener" target="_blank">'+escHtml(s.name)+'</a>';
+      }).join(" ");
+
+    var secHtml = secondaryList.map(function(s){
+      return '<a href="'+escHtml(s.url)+'" rel="noopener" target="_blank">'+escHtml(s.name)+'</a>';
+    }).join(" ");
+    secHtml += ' <a href="https://github.com/prog815/okso" rel="noopener" target="_blank">О справочнике</a>';
+    elFootSecondary.innerHTML = '<span class="cap">Первоисточники и текстовые редакции для сверки:</span>' + secHtml;
+
+    var disc = (META && META.disclaimer) ? META.disclaimer
       : "Материалы носят справочный характер и не являются точными копиями официальных документов. Перед применением в официальных документах сверяйте по первоисточнику.";
-    
     elFootDisc.textContent = disc;
   }
 
   function focusCode(code){
     setTimeout(function(){
-      var el = document.querySelector('article.card[data-code="'+code+'"]');
+      var el = document.querySelector('article.card[data-code="'+String(code).replace(/"/g,'\\"')+'"]');
       if(!el) return;
       document.querySelectorAll(".card.highlight").forEach(function(node){ node.classList.remove("highlight"); });
       el.classList.add("highlight");
       el.scrollIntoView({behavior:"smooth", block:"center"});
-      setTimeout(function(){ el.classList.remove("highlight"); }, 1800);
+      setTimeout(function(){ el.classList.remove("highlight"); }, HIGHLIGHT_MS);
     }, 30);
+  }
+
+  function syncCodeToUrl(internalCode){
+    var sp = new URLSearchParams(location.search);
+    sp.set("code", internalCode);
+    var qs = sp.toString();
+    try{ history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "")); }catch(e){}
+  }
+
+  function clearCodeFromUrl(){
+    var sp = new URLSearchParams(location.search);
+    sp.delete("code");
+    var qs = sp.toString();
+    try{ history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "")); }catch(e){}
+  }
+
+  function syncUrl(){
+    var sp = new URLSearchParams();
+    var section = elSection.value; if (section) sp.set("section", section);
+    var qs = sp.toString();
+    try{ history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "")); }catch(e){}
   }
 
   function parseUrlAndApply(){
     var sp = new URLSearchParams(location.search);
-    var code = sp.get("code") || "";
-    var q = sp.get("q") || "";
-    var sec = sp.get("section") || "";
-    var lvl = sp.get("lvl") || "";
+    var codeParam = (sp.get("code") || "").trim();
+    var section = sp.get("section") || "";
 
-    elSec.value = sec;
-    elLevel.value = lvl;
+    elSection.value = section;
 
-    pendingFocusCode = "";
-    if(code){
-      elQ.value = code;
-      pendingFocusCode = code;
-    }else{
-      elQ.value = q;
+    if (codeParam){
+      var rec = resolveCodeInput(codeParam);
+      if (rec){
+        activeDeepLinkCode = rec.code;
+        elQ.value = displayCodeOf(rec);
+        elSection.value = "";   // сброс фильтра, чтобы карточка точно была видна
+      } else {
+        activeDeepLinkCode = null;
+        elQ.value = codeParam;
+      }
+    } else {
+      activeDeepLinkCode = null;
+      elQ.value = "";
     }
     syncClear();
 
     applyFilters();
-    if(pendingFocusCode) focusCode(pendingFocusCode);
-  }
-  
-  function syncUrl(){
-    var sp = new URLSearchParams();
-    var q = elQ.value.trim(); if(q) sp.set("q", q);
-    var sec = elSec.value; if(sec) sp.set("section", sec);
-    var lvl = elLevel.value; if(lvl) sp.set("lvl", lvl);
-    var qs = sp.toString();
-    var url = location.pathname + (qs?("?"+qs):"");
-    try{ history.replaceState(null,"",url); }catch(e){}
+    if (activeDeepLinkCode){
+      focusCode(activeDeepLinkCode);
+    }
   }
 
-  var toastTimer=null;
+  var toastTimer = null;
   function toast(msg){
     elToast.textContent = msg;
     elToast.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function(){ elToast.classList.remove("show"); }, 3000);
+    toastTimer = setTimeout(function(){ elToast.classList.remove("show"); }, TOAST_MS);
   }
-  function copyText(text, label){
-    var done=function(){ toast(label); };
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
-    }else{ fallbackCopy(text); done(); }
-  }
-  function fallbackCopy(text){
-    var ta=document.createElement("textarea");
-    ta.value=text; ta.setAttribute("readonly",""); ta.style.position="absolute"; ta.style.left="-9999px";
-    document.body.appendChild(ta); ta.select();
-    try{ document.execCommand("copy"); }catch(e){}
-    document.body.removeChild(ta);
-  }
-
-  // ---------- SHARE LOGIC ----------
-  function buildShareText(r) {
-    var lines = [];
-    var displayCode = r.official || r.code;
-    
-    lines.push("📚 ОКСО — Общероссийский классификатор специальностей по образованию");
-    lines.push("");
-    lines.push("Код: " + displayCode);
-    lines.push("Название: " + r.name);
-    
-    var levelName = LEVEL_NAMES[r.level] || "Группа";
-    lines.push("Уровень: " + r.level + " — " + levelName);
-    
-    if (r.section && META && META.sections) {
-      var secData = META.sections.find(function(x){ return x.roman === r.section; });
-      if (secData) {
-        lines.push("Раздел: " + r.section + " — " + secData.name);
-      } else {
-        lines.push("Раздел: " + r.section);
+  async function copyText(text, label){
+    if(!text) return false;
+    try{
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+        if (label) toast(label);
+        return true;
       }
-    }
-    
-    if (r.parent && BY_CODE[r.parent]) {
-      var parent = BY_CODE[r.parent];
-      var parentDisplay = parent.official || parent.code;
-      lines.push("Группа: " + parentDisplay + " — " + parent.name);
-    }
-    
-    if (r.msko11) lines.push("МСКО 2011: " + r.msko11);
-    if (r.msko13) lines.push("МСКО-О 2013: " + r.msko13);
-    
-    lines.push("");
-    lines.push("Посмотреть карточку в справочнике:");
-    lines.push(location.origin + location.pathname + "?code=" + encodeURIComponent(r.code));
-    
-    return lines.join("\n");
+    }catch(e){}
+    try{
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "absolute";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      if (ok){
+        if (label) toast(label);
+        return true;
+      }
+    }catch(e){}
+    return false;
   }
 
-
-
-
-
-  function syncClear(){ elBox.classList.toggle("has-val", !!elQ.value); }
-
-  var deb=null;
-  function onInput(){
-    syncClear();
-    clearTimeout(deb);
-    deb=setTimeout(function(){ applyFilters(); syncUrl(); }, DEBOUNCE_MS);
-  }
-
-  elQ.addEventListener("input", onInput);
-  elQ.addEventListener("search", function(){ syncClear(); applyFilters(); syncUrl(); });
-  elClear.addEventListener("click", function(){ elQ.value=""; syncClear(); applyFilters(); syncUrl(); elQ.focus(); });
-  elSec.addEventListener("change", function(){ applyFilters(); syncUrl(); });
-  elLevel.addEventListener("change", function(){ applyFilters(); syncUrl(); });
-  elMore.addEventListener("click", function(){ shown += PAGE_SIZE; renderList(); });
-  
-  elList.addEventListener("click", function(e){
+  function onListClick(e){
     var btn = e.target.closest("[data-act]");
     if(!btn) return;
     var act = btn.dataset.act, val = btn.dataset.val;
-    
-    if(act==="copy-code") copyText(val, "Код "+val+" скопирован");
-    else if(act==="copy-full") copyText(val, "Скопировано: "+val);
-    else if(act==="filter-sec") {
-      elSec.value = val;
-      elQ.value = "";
-      syncClear();
+
+    if (act === "copy-code"){
+      copyText(val, "Код " + val + " скопирован");
+      var card = btn.closest("article.card");
+      if (card && card.dataset.code){
+        activeDeepLinkCode = card.dataset.code;
+        syncCodeToUrl(card.dataset.code);
+      }
+    }
+    else if (act === "copy-full"){
+      copyText(val, "Строка скопирована");
+    }
+    else if (act === "filter-sec"){
+      elSection.value = val;
+      activeDeepLinkCode = null;
+      clearCodeFromUrl();
       applyFilters();
       syncUrl();
-      window.scrollTo({top:0,behavior:"smooth"});
+      window.scrollTo({top:0, behavior:"smooth"});
     }
-    else if(act==="open-code") {
-      elQ.value = val;
-      syncClear();
-      applyFilters();
-      syncUrl();
-      focusCode(val);
-      window.scrollTo({top:0,behavior:"smooth"});
+  }
+
+  function syncClear(){ elBox.classList.toggle("has-val", !!elQ.value); }
+
+  var deb = null;
+  function onInput(){
+    syncClear();
+    activeDeepLinkCode = null;
+    if (elQ.value){
+      clearCodeFromUrl();
     }
+    clearTimeout(deb);
+    deb = setTimeout(function(){ applyFilters(); }, DEBOUNCE_MS);
+  }
+
+  elQ.addEventListener("input", onInput);
+  elClearBtn.addEventListener("click", function(){
+    elQ.value = "";
+    activeDeepLinkCode = null;
+    clearCodeFromUrl();
+    syncClear();
+    applyFilters();
+    elQ.focus();
+  });
+  elSection.addEventListener("change", function(){
+    activeDeepLinkCode = null;
+    clearCodeFromUrl();
+    applyFilters();
+    syncUrl();
+  });
+  elMore.addEventListener("click", function(){ shown += PAGE_SIZE; renderList(); });
+  elList.addEventListener("click", onListClick);
+
+  elClearAll.addEventListener("click", function(){
+    elQ.value = "";
+    elSection.value = "";
+    activeDeepLinkCode = null;
+    clearCodeFromUrl();
+    syncClear();
+    applyFilters();
+    syncUrl();
+    window.scrollTo({top:0, behavior:"smooth"});
   });
 
   window.addEventListener("popstate", function(){ parseUrlAndApply(); });
@@ -925,13 +965,13 @@
     var y = window.scrollY || document.documentElement.scrollTop || 0;
     var docH = document.documentElement.scrollHeight;
     var winH = window.innerHeight;
-    elTop.style.display = (y>SCROLL_THRESHOLD) ? "block":"none";
-    elBottom.style.display = (y>SCROLL_THRESHOLD && (y+winH) < (docH-40)) ? "block":"none";
+    elTop.style.display = (y > SCROLL_THRESHOLD) ? "block" : "none";
+    elBottom.style.display = (y > SCROLL_THRESHOLD && (y + winH) < (docH - 40)) ? "block" : "none";
   }
   window.addEventListener("scroll", onScroll, {passive:true});
   window.addEventListener("resize", onScroll);
-  elTop.addEventListener("click", function(){ window.scrollTo({top:0,behavior:"smooth"}); });
-  elBottom.addEventListener("click", function(){ window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"}); });
+  elTop.addEventListener("click", function(){ window.scrollTo({top:0, behavior:"smooth"}); });
+  elBottom.addEventListener("click", function(){ window.scrollTo({top:document.documentElement.scrollHeight, behavior:"smooth"}); });
 
   syncClear();
   loadAll();
