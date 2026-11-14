@@ -395,7 +395,7 @@
     { name: "classifikators.ru — ОКСО", url: "https://classifikators.ru/okso", role: "primary" }
   ];
   var DEFAULT_SECONDARY_SOURCES = [
-    { name: "Росстандарт (protect.gost.ru)", url: "https://protect.gost.ru/", role: "secondary" },
+    { name: "Росстандарт (protect.gost.ru)", url: "https://protect.gost.ru/classificators/details/d6eeb970-02c6-43e4-8cee-c07b8b3fc31e", role: "secondary" },
     { name: "КонсультантПлюс", url: "https://www.consultant.ru/document/cons_doc_LAW_212200/", role: "secondary" },
     { name: "Гарант", url: "https://internet.garant.ru/#/document/71594768", role: "secondary" },
     { name: "Кодекс", url: "https://docs.cntd.ru/document/456069557", role: "secondary" }
@@ -773,12 +773,30 @@
     renderMore();
   }
 
+  // Расширенный текст для «Поделиться»: передаём всё, что есть в карточке.
+  // Ссылка — второй строкой (сразу после названия), чтобы не обрезалась
+  // при ограничениях длины в веб-почте и мессенджерах.
   function getShareText(r, url) {
-    var lines = [r.code + ' — ' + r.name];
-    if (r.official) {
+    var lines = [];
+    lines.push(r.name);
+    lines.push('Ссылка: ' + url);
+    lines.push('');
+    lines.push('Внутренний код: ' + r.code);
+    if (r.official && r.official !== r.code) {
       lines.push('Официальный код: ' + r.official);
     }
-    lines.push('Ссылка: ' + url);
+    if (r.level && LEVEL_NAMES[r.level]) {
+      lines.push('Уровень: ' + r.level + ' · ' + LEVEL_NAMES[r.level]);
+    }
+    if (r.section) {
+      var secData = (META && META.sections)
+        ? META.sections.find(function(s){ return s.roman === r.section; })
+        : null;
+      if (secData) lines.push('Раздел: §' + r.section + ' — ' + secData.name);
+      else lines.push('Раздел: ' + r.section);
+    }
+    if (r.msko11) lines.push('МСКО 2011: ' + r.msko11);
+    if (r.mskoO13) lines.push('МСКО-О 2013: ' + r.mskoO13);
     return lines.join('\n');
   }
 
@@ -919,12 +937,11 @@
       }
     });
 
-    // 3. Разделяем и фильтруем
+    // 3. Разделяем. Росстандарт (protect.gost.ru) выводится в футере (фильтр убран).
     var primaryList = allSources.filter(function(s){ return s.url && s.role === 'primary'; });
     var secondaryList = allSources.filter(function(s){ 
       return s.url && s.role !== 'primary' && 
-             s.url.indexOf('classifikators.ru') === -1 &&
-             s.url.indexOf('gost.ru') === -1; // Росстандарт не выводим в футер
+             s.url.indexOf('classifikators.ru') === -1;
     });
 
     // Дедупликация
